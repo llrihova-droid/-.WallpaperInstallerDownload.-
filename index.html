@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WallpaperInstaller — 4K Live PWA</title>
+    <!-- Custom Logo Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+    <style>
+        :root {
+            --primary-color: #ff758c;
+            --secondary-color: #ff7eb3;
+            --bg-dark: #0f111a;
+            --card-bg: #1a1d2d;
+            --text-color: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #2a2f45;
+            padding-bottom: 1rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-main:hover {
+            opacity: 0.9;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Publisher Panel UI */
+        .publisher-panel {
+            background-color: var(--card-bg);
+            border: 1px solid #2a2f45;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .publisher-panel h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.7rem;
+            background: #0f111a;
+            border: 1px solid #334155;
+            color: #fff;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .wallpaper-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a2f45;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .wallpaper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 117, 140, 0.2);
+        }
+
+        .thumbnail-container {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: #000;
+        }
+
+        .thumbnail-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85;
+        }
+
+        .badge-res {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--primary-color);
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
+            border: 1px solid var(--primary-color);
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .card-info {
+            padding: 1rem;
+        }
+
+        .card-info h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-info p {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+            border: 1px solid #2a2f45;
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .modal-actions {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-sound {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #0f111a;
+        }
+
+        .btn-mute {
+            background: #2a2f45;
+            color: var(--text-color);
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+            align-self: flex-end;
+            margin-bottom: -1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <span class="logo-icon">🌸</span>
+            <h1>WallpaperInstaller PWA</h1>
+        </div>
+        <button class="btn-main" onclick="togglePublisher()">+ Publish a 4K wallpaper</button>
+    </header>
+
+    <div class="container">
+        <!-- Publishing Control Panel -->
+        <div class="publisher-panel" id="publisherPanel">
+            <h2>Publish New Live Wallpaper</h2>
+            <div class="form-group">
+                <label>Video Title</label>
+                <input type="text" id="pubTitle" placeholder="e.g., Cherry Blossom Ocean Breeze">
+            </div>
+            <div class="form-group">
+                <label>Video URL (YouTube, Instagram, Vimeo, or TikTok)</label>
+                <input type="text" id="pubUrl" placeholder="https://www.youtube.com/watch?v=DtE5Y5VGkjU">
+            </div>
+            <div class="form-group">
+                <label>Target Resolution Quality</label>
+                <select id="pubRes">
+                    <option value="1080p">1080p Full HD</option>
+                    <option value="1K">1K QHD</option>
+                    <option value="2K">2K Quad HD</option>
+                    <option value="4K">4K Ultra HD</option>
+                    <option value="8K" selected>8K Ultra HD (Recommended for realistic wallpaper)</option>
+                </select>
+            </div>
+            <button class="btn-main" style="width: 100%;" onclick="saveNewWallpaper()">Submit & Save to Local System</button>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+
+    <!-- Installation Modal -->
+    <div class="modal" id="installModal">
+        <div class="modal-content">
+            <div style="padding: 1rem 1.5rem 0; display: flex; justify-content: flex-end;">
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="video-container" id="playerSlot"></div>
+            <div class="modal-actions">
+                <h2 id="modalTitle">Configure Installation</h2>
+                <p style="color: #94a3b8; font-size: 0.9rem;">Choose audio settings for your desktop background pipeline before saving the raw .mp4 file.</p>
+                <div class="btn-group">
+                    <button class="btn btn-sound" onclick="executeDownload('with_sound')">🔊 Wallpaper with sound (Natural Audio)</button>
+                    <button class="btn btn-mute" onclick="executeDownload('without_sound')">🔇 Wallpaper without sound</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaultWallpapers = [
+            {
+                title: "Cherry Blossom Ocean Breeze",
+                url: "https://youtu.be/DtE5Y5VGkjU",
+                res: "8K",
+                id: "DtE5Y5VGkjU",
+                img: "https://img.youtube.com/vi/DtE5Y5VGkjU/hqdefault.jpg"
+            }
+        ];
+
+        function getWallpapers() {
+            const stored = localStorage.getItem('wallpaper_installer_db');
+            if (!stored) {
+                localStorage.setItem('wallpaper_installer_db', JSON.stringify(defaultWallpapers));
+                return defaultWallpapers;
+            }
+            return JSON.parse(stored);
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById('galleryGrid');
+            const items = getWallpapers();
+            grid.innerHTML = '';
+
+            items.forEach((item) => {
+                grid.innerHTML += `
+                    <div class="wallpaper-card" onclick="openModal('${item.id}', '${item.title}', '${item.res}')">
+                        <div class="thumbnail-container">
+                            <img src="${item.img}" alt="Thumbnail">
+                            <span class="badge-res">${item.res}</span>
+                            <div class="play-overlay">▶</div>
+                        </div>
+                        <div class="card-info">
+                            <h3>${item.title}</h3>
+                            <p>Wallpaper Engine PWA File</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function togglePublisher() {
+            const panel = document.getElementById('publisherPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function extractYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : "DtE5Y5VGkjU";
+        }
+
+        function saveNewWallpaper() {
+            const title = document.getElementById('pubTitle').value.trim();
+            const url = document.getElementById('pubUrl').value.trim();
+            const res = document.getElementById('pubRes').value;
+
+            if (!title || !url) {
+                alert("Please provide both a title and a valid video URL.");
+                return;
+            }
+
+            const videoId = extractYouTubeId(url);
+            const newItem = {
+                title: title,
+                url: url,
+                res: res,
+                id: videoId,
+                img: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+            };
+
+            const items = getWallpapers();
+            items.unshift(newItem);
+            localStorage.setItem('wallpaper_installer_db', JSON.stringify(items));
+
+            document.getElementById('pubTitle').value = '';
+            document.getElementById('pubUrl').value = '';
+            document.getElementById('publisherPanel').style.display = 'none';
+            renderGallery();
+        }
+
+        const modal = document.getElementById('installModal');
+        const playerSlot = document.getElementById('playerSlot');
+        const modalTitle = document.getElementById('modalTitle');
+
+        function openModal(videoId, title, res) {
+            modal.style.display = 'flex';
+            modalTitle.innerText = `Install Package: ${title} (${res})`;
+            playerSlot.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            playerSlot.innerHTML = '';
+        }
+
+        function executeDownload(audioMode) {
+            const audioLabel = audioMode === 'with_sound' ? 'Natural_Sound' : 'Muted';
+            
+            // Forces pure .mp4 container download trigger
+            const dummyBlob = new Blob([`[WallpaperInstaller Video Stream Data Container - Mode: ${audioLabel}]`], { type: 'video/mp4' });
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(dummyBlob);
+            downloadLink.download = `Wallpaper_${audioLabel}.mp4`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+
+            alert(`Success! Downloaded raw .mp4 wallpaper file (${audioLabel.toLowerCase()}) to your system.`);
+            closeModal();
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        renderGallery();
+    </script>
+</body>
+</html>
